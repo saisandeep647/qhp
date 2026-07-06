@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QHP - Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body class="bg-gray-50 font-sans">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <div class="w-72 bg-white border-r shadow-lg flex flex-col">
+            <div class="p-6 border-b">
+                <div class="flex items-center gap-3">
+                    <div class="text-4xl font-bold text-blue-600">QHP</div>
+                    <div class="text-sm">
+                        <span class="text-blue-600 font-semibold">QUICK</span><br>
+                        <span class="text-orange-500 font-semibold">HELPING PARTNER</span>
+                    </div>
+                </div>
+            </div>
+
+            <nav class="flex-1 p-4 space-y-1">
+                <a href="#" class="flex items-center gap-3 px-4 py-3 bg-blue-50 text-blue-700 rounded-2xl font-medium">
+                    <i class="fas fa-home"></i> Dashboard
+                </a>
+                <a href="#" class="flex items-center gap-3 px-4 py-3 hover:bg-gray-100 rounded-2xl">
+                    <i class="fas fa-shopping-bag"></i> Order Food
+                </a>
+                <a href="#" class="flex items-center gap-3 px-4 py-3 hover:bg-gray-100 rounded-2xl">
+                    <i class="fas fa-pills"></i> Medicine Order
+                </a>
+                <a href="#" class="flex items-center gap-3 px-4 py-3 hover:bg-gray-100 rounded-2xl">
+                    <i class="fas fa-box"></i> Parcel Booking
+                </a>
+                <a href="orders.html" class="flex items-center gap-3 px-4 py-3 hover:bg-gray-100 rounded-2xl">
+                    <i class="fas fa-history"></i> My Orders
+                </a>
+                <a href="track-order.html" class="flex items-center gap-3 px-4 py-3 hover:bg-gray-100 rounded-2xl">
+                    <i class="fas fa-map-marker-alt"></i> Track Order
+                </a>
+                <a href="wallet.html" class="flex items-center gap-3 px-4 py-3 hover:bg-gray-100 rounded-2xl">
+                    <i class="fas fa-wallet"></i> Wallet
+                </a>
+                <a href="profile.html" class="flex items-center gap-3 px-4 py-3 hover:bg-gray-100 rounded-2xl">
+                    <i class="fas fa-user"></i> Profile
+                </a>
+                <a href="settings.html" class="flex items-center gap-3 px-4 py-3 hover:bg-gray-100 rounded-2xl">
+                    <i class="fas fa-cog"></i> Settings
+                </a>
+            </nav>
+
+            <div class="p-4 border-t mt-auto">
+                <button onclick="logout()" class="w-full flex items-center justify-center gap-2 text-red-600 hover:bg-red-50 py-3 rounded-2xl font-medium">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 overflow-auto">
+            <header class="bg-white border-b px-8 py-6 flex justify-between items-center">
+                <h1 class="text-3xl font-semibold">Good evening, <span class="text-blue-600">Rahul</span> 👋</h1>
+                <div class="flex items-center gap-6">
+                    <div class="bg-green-100 text-green-700 px-5 py-2 rounded-2xl text-sm font-medium flex items-center gap-2">
+                        <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                        Online
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <img src="https://picsum.photos/id/64/48/48" class="w-12 h-12 rounded-2xl object-cover" alt="Profile">
+                        <div>
+                            <div class="font-semibold">Rahul Sharma</div>
+                            <div class="text-xs text-gray-500">+91 98765 43210</div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="p-8">
+                <!-- Quick Action Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                    <div onclick="alert('Medicine order started')" class="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-8 rounded-3xl cursor-pointer hover:scale-105 transition-all">
+                        <div class="text-5xl mb-4">💊</div>
+                        <div class="text-2xl font-semibold">Order Medicines</div>
+                        <div class="text-sm opacity-90 mt-1">Delivered in 20-30 mins</div>
+                    </div>
+
+                    <div onclick="alert('Grocery order started')" class="bg-gradient-to-br from-orange-500 to-orange-600 text-white p-8 rounded-3xl cursor-pointer hover:scale-105 transition-all">
+                        <div class="text-5xl mb-4">🛒</div>
+                        <div class="text-2xl font-semibold">Groceries & Daily Needs</div>
+                        <div class="text-sm opacity-90 mt-1">Fresh from store</div>
+                    </div>
+
+                    <div onclick="alert('Parcel booking started')" class="bg-gradient-to-br from-purple-500 to-purple-600 text-white p-8 rounded-3xl cursor-pointer hover:scale-105 transition-all">
+                        <div class="text-5xl mb-4">📦</div>
+                        <div class="text-2xl font-semibold">Book a Parcel</div>
+                        <div class="text-sm opacity-90 mt-1">Send anything</div>
+                    </div>
+                </div>
+
+                <!-- Recent Orders -->
+                <div class="bg-white rounded-3xl shadow p-8">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-semibold">Recent Orders</h2>
+                        <a href="orders.html" class="text-blue-600 font-medium hover:underline">View All →</a>
+                    </div>
+                    <div class="space-y-6">
+                        <div class="flex items-center gap-6 border-b pb-6">
+                            <div class="w-20 h-20 bg-blue-100 rounded-2xl flex items-center justify-center text-4xl">💊</div>
+                            <div class="flex-1">
+                                <div class="font-medium text-lg">#QHP-7842 - Medicines & Groceries</div>
+                                <div class="text-gray-500">Delivered • Today at 2:45 PM</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="font-semibold text-green-600">₹428</div>
+                                <span class="bg-green-100 text-green-700 px-4 py-1 rounded-full text-sm">Delivered</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function logout() {
+            if (confirm("Are you sure you want to logout?")) {
+                window.location.href = "../login.html";
+            }
+        }
+    </script>
+</body>
+</html>
