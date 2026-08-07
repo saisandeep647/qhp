@@ -1,0 +1,399 @@
+<?php
+$config = require __DIR__ . '/config.php';
+$base = $config->BASE_URL ?: ''; // if empty, same origin
+?>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Business Verification Dashboard</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <style>
+    body { padding: 18px; background:#f6f9fc; }
+    .status-pill { padding:4px 8px; border-radius:999px; font-size:0.85rem; }
+    .status-pending{ background:#fff3cd; color:#856404; }
+    .status-accepted{ background:#d1e7dd; color:#0f5132; }
+    .status-rejected{ background:#f8d7da; color:#842029; }
+    .phone { font-family: monospace; }
+    .table-wrap{ max-height:600px; overflow:auto; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h4>Business Verification Dashboard</h4>
+    <div class="row mt-3">
+      <div class="col-lg-4">
+        <div class="card p-3">
+          <h6>Add Business</h6>
+          <form id="entryForm">
+            <input type="hidden" id="entryId" />
+            <div class="mb-2">
+              <label>Category</label>
+              <select id="category" class="form-select" required>
+                <option value="">-- Select --</option>
+                <option>Restaurants</option>
+                <option>Beauty Spa</option>
+                <option>Rent & Hire</option>
+                <option>Hospitals</option>
+                <option>Home Decor</option>
+                <option>AC Repair Services</option>
+                <option>Home Services</option>
+                <option>Medicines</option>
+                <option>Groceries</option>
+                <option>Fancy Stores</option>
+                <option>Supermarkets</option>
+                <option>Lodges</option>
+                <option>Car Rentals</option>
+                <option>Water Plants</option>
+                <option>Tailoring</option>
+                <option>Car Servicing</option>
+                <option>Home Beauty Makers</option>
+                <option>Carpenters</option>
+                <option>Plumbers</option>
+                <option>Event Planners</option>
+                <option>Food Caterings</option>
+                <option>Printing Shops</option>
+                <option>Photography</option>
+                <option>Tourist Guides</option>
+                <option>Trip Planners</option>
+              </select>
+            </div>
+
+            <div class="mb-2">
+              <label>Business Name</label>
+              <input id="businessName" class="form-control" required />
+            </div>
+
+            <div class="mb-2">
+              <label>Location</label>
+              <input id="location" class="form-control" />
+            </div>
+
+            <div class="mb-2">
+              <label>Business Phone</label>
+              <input id="businessPhone" class="form-control" />
+            </div>
+
+            <div class="d-flex gap-2">
+              <button class="btn btn-primary btn-sm" id="saveBtn">Save</button>
+              <button type="button" class="btn btn-secondary btn-sm" id="resetBtn">Reset</button>
+              <button type="button" class="btn btn-outline-success btn-sm" id="exportBtn">Export JSON</button>
+              <button type="button" class="btn btn-outline-secondary btn-sm" id="importBtn">Import JSON</button>
+              <input type="file" id="importFile" accept="application/json" style="display:none" />
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="col-lg-8">
+        <div class="card p-3">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <div>
+              <button class="btn btn-sm btn-outline-primary filterBtn active" data-filter="all">All</button>
+              <button class="btn btn-sm btn-outline-warning filterBtn" data-filter="pending">Pending</button>
+              <button class="btn btn-sm btn-outline-success filterBtn" data-filter="accepted">Accepted</button>
+              <button class="btn btn-sm btn-outline-danger filterBtn" data-filter="rejected">Rejected</button>
+            </div>
+            <div id="counts" class="small text-muted">Loading...</div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="table table-sm table-hover">
+              <thead class="table-light sticky-top">
+                <tr>
+                  <th>Cat</th>
+                  <th>Business</th>
+                  <th>Location</th>
+                  <th>Owner</th>
+                  <th>Phones</th>
+                  <th>Verified</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="entriesTbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="mt-3 small text-muted">Owner and personal phone are only visible after an entry is Accepted.</footer>
+  </div>
+
+  <!-- Modals -->
+  <div class="modal fade" id="verifyModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form id="verifyForm" class="p-3">
+          <h6>Verify — enter Owner & Personal Phone</h6>
+          <input type="hidden" id="verifyId" />
+          <div class="mb-2">
+            <label>Owner Name</label>
+            <input id="verifyOwner" class="form-control" required />
+          </div>
+          <div class="mb-2">
+            <label>Personal Phone</label>
+            <input id="verifyPhone" class="form-control" required />
+          </div>
+          <div class="d-flex gap-2 justify-content-end">
+            <button type="submit" class="btn btn-success btn-sm">Save & Verify</button>
+            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="viewModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content p-3">
+        <div id="viewBody"></div>
+        <div class="d-flex gap-2 justify-content-end mt-2">
+          <button id="modalReject" class="btn btn-danger btn-sm">Reject</button>
+          <button id="modalAccept" class="btn btn-success btn-sm">Accept</button>
+          <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+const API_BASE = '<?php echo addslashes($base); ?>' || '';
+const api = (path, opts) => fetch(API_BASE + '/api.php' + path, opts).then(async r => {
+  let data = null;
+  const ct = r.headers.get('content-type') || '';
+  if (ct.includes('application/json')) data = await r.json();
+  if (!r.ok) throw data || { error: 'Network error' };
+  return data;
+});
+
+let entries = [];
+let currentFilter = 'all';
+const verifyModal = new bootstrap.Modal(document.getElementById('verifyModal'));
+const viewModal = new bootstrap.Modal(document.getElementById('viewModal'));
+
+async function loadEntries() {
+  try {
+    const statusQ = currentFilter === 'all' ? '' : '?status=' + encodeURIComponent(currentFilter);
+    entries = await api('/entries' + statusQ);
+    renderList();
+  } catch (err) {
+    console.error(err);
+    alert('Failed to load entries');
+  }
+}
+
+function renderList() {
+  const tbody = document.getElementById('entriesTbody');
+  tbody.innerHTML = '';
+  for (const e of entries) {
+    const tr = document.createElement('tr');
+
+    const ownerVisible = e.status === 'accepted';
+    const personalVisible = e.status === 'accepted';
+
+    tr.innerHTML = `
+      <td>${escapeHtml(e.category)}</td>
+      <td>${escapeHtml(e.businessName)}</td>
+      <td>${escapeHtml(e.location || '')}</td>
+      <td>${ownerVisible ? escapeHtml(e.ownerName || '') : '<em class="text-muted">Hidden until accepted</em>'}</td>
+      <td>${personalVisible ? '<div class="phone">' + escapeHtml(e.personalPhone || '') + '</div>' : '<em class="text-muted">Hidden</em>'}
+          ${e.businessPhone ? '<div class="small text-muted">Business: ' + escapeHtml(e.businessPhone) + '</div>' : ''}
+      </td>
+      <td>${e.verified ? '<span class="text-success">Yes</span>' : '<span class="text-danger">No</span>'}</td>
+      <td><span class="status-pill ${e.status==='pending'?'status-pending':e.status==='accepted'?'status-accepted':'status-rejected'}">${e.status}</span></td>
+      <td></td>
+    `;
+    const actionsTd = tr.children[7];
+
+    const viewBtn = document.createElement('button');
+    viewBtn.className = 'btn btn-sm btn-outline-primary me-1';
+    viewBtn.textContent = 'View';
+    viewBtn.onclick = () => openView(e.id);
+
+    const verifyBtn = document.createElement('button');
+    verifyBtn.className = 'btn btn-sm btn-outline-success me-1';
+    verifyBtn.textContent = 'Verify';
+    verifyBtn.onclick = () => openVerify(e.id);
+
+    const acceptBtn = document.createElement('button');
+    acceptBtn.className = 'btn btn-sm btn-success me-1';
+    acceptBtn.textContent = 'Accept';
+    acceptBtn.onclick = () => acceptEntry(e.id);
+
+    const rejectBtn = document.createElement('button');
+    rejectBtn.className = 'btn btn-sm btn-danger me-1';
+    rejectBtn.textContent = 'Reject';
+    rejectBtn.onclick = () => rejectEntry(e.id);
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'btn btn-sm btn-outline-danger';
+    delBtn.textContent = 'Delete';
+    delBtn.onclick = async () => {
+      if (!confirm('Delete this entry?')) return;
+      try {
+        await api('/entries/' + e.id, { method: 'DELETE' });
+        await loadEntries();
+      } catch (err) { alert('Delete failed'); }
+    };
+
+    actionsTd.appendChild(viewBtn);
+    actionsTd.appendChild(verifyBtn);
+    actionsTd.appendChild(acceptBtn);
+    actionsTd.appendChild(rejectBtn);
+    actionsTd.appendChild(delBtn);
+
+    tbody.appendChild(tr);
+  }
+
+  api('/entries').then(all => {
+    const p = all.filter(x=>x.status==='pending').length;
+    const a = all.filter(x=>x.status==='accepted').length;
+    const r = all.filter(x=>x.status==='rejected').length;
+    document.getElementById('counts').textContent = `Showing ${entries.length} • Total ${all.length} • Pending ${p} • Accepted ${a} • Rejected ${r}`;
+  }).catch(()=> document.getElementById('counts').textContent = `Showing ${entries.length}`);
+}
+
+function escapeHtml(s) {
+  if (!s && s !== 0) return '';
+  return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');
+}
+
+document.getElementById('entryForm').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  const id = document.getElementById('entryId').value;
+  const payload = {
+    category: document.getElementById('category').value,
+    businessName: document.getElementById('businessName').value.trim(),
+    location: document.getElementById('location').value.trim(),
+    businessPhone: document.getElementById('businessPhone').value.trim()
+  };
+  if (!payload.category || !payload.businessName) return alert('Category and Business Name required');
+  try {
+    if (id) {
+      await api('/entries/' + id, { method: 'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+    } else {
+      await api('/entries', { method: 'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+    }
+    document.getElementById('entryForm').reset();
+    document.getElementById('entryId').value = '';
+    await loadEntries();
+  } catch (err) {
+    console.error(err); alert('Save failed');
+  }
+});
+
+document.getElementById('resetBtn').addEventListener('click', ()=> {
+  document.getElementById('entryForm').reset();
+  document.getElementById('entryId').value = '';
+});
+
+function openVerify(id) {
+  document.getElementById('verifyId').value = id;
+  document.getElementById('verifyOwner').value = '';
+  document.getElementById('verifyPhone').value = '';
+  verifyModal.show();
+}
+document.getElementById('verifyForm').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  const id = document.getElementById('verifyId').value;
+  const ownerName = document.getElementById('verifyOwner').value.trim();
+  const personalPhone = document.getElementById('verifyPhone').value.trim();
+  if (!ownerName || !personalPhone) return alert('Owner and Personal Phone required');
+  try {
+    await api('/entries/' + id + '/verify', { method: 'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ ownerName, personalPhone }) });
+    verifyModal.hide();
+    await loadEntries();
+  } catch (err) { console.error(err); alert('Verify failed'); }
+});
+
+async function acceptEntry(id) {
+  if (!confirm('Accept this entry? After accepting the owner and personal phone will be visible.')) return;
+  try {
+    await api('/entries/' + id + '/accept', { method: 'POST' });
+    await loadEntries();
+  } catch (err) { alert('Accept failed'); }
+}
+
+async function rejectEntry(id) {
+  const reason = prompt('Reject reason (required):');
+  if (reason === null) return;
+  const rtrim = String(reason).trim();
+  if (!rtrim) return alert('Reject reason required');
+  try {
+    await api('/entries/' + id + '/reject', { method: 'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ reason: rtrim }) });
+    await loadEntries();
+  } catch (err) { alert('Reject failed'); }
+}
+
+async function openView(id) {
+  try {
+    const e = await api('/entries/' + id);
+    const body = document.getElementById('viewBody');
+    const ownerVisible = e.status === 'accepted';
+    const personalVisible = e.status === 'accepted';
+    body.innerHTML = `
+      <dl class="row">
+        <dt class="col-sm-4">Category</dt><dd class="col-sm-8">${escapeHtml(e.category)}</dd>
+        <dt class="col-sm-4">Business</dt><dd class="col-sm-8">${escapeHtml(e.businessName)}</dd>
+        <dt class="col-sm-4">Location</dt><dd class="col-sm-8">${escapeHtml(e.location || '')}</dd>
+        <dt class="col-sm-4">Owner</dt><dd class="col-sm-8">${ownerVisible ? escapeHtml(e.ownerName || '') : '<em>Hidden until accepted</em>'}</dd>
+        <dt class="col-sm-4">Personal Phone</dt><dd class="col-sm-8">${personalVisible ? escapeHtml(e.personalPhone || '') : '<em>Hidden</em>'}</dd>
+        <dt class="col-sm-4">Business Phone</dt><dd class="col-sm-8">${escapeHtml(e.businessPhone || '')}</dd>
+        <dt class="col-sm-4">Verified</dt><dd class="col-sm-8">${e.verified ? 'Yes' : 'No'}</dd>
+        <dt class="col-sm-4">Status</dt><dd class="col-sm-8">${e.status}</dd>
+        ${e.status === 'rejected' ? `<dt class="col-sm-4">Reject Reason</dt><dd class="col-sm-8">${escapeHtml(e.rejectReason || '')}</dd>` : ''}
+      </dl>
+    `;
+    document.getElementById('modalAccept').onclick = async () => { await acceptEntry(id); viewModal.hide(); };
+    document.getElementById('modalReject').onclick = async () => { viewModal.hide(); await rejectEntry(id); };
+    viewModal.show();
+  } catch (err) { alert('Failed to load'); }
+}
+
+// filters
+document.querySelectorAll('.filterBtn').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('.filterBtn').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    currentFilter = b.dataset.filter;
+    loadEntries();
+  });
+});
+
+// export / import
+document.getElementById('exportBtn').addEventListener('click', async () => {
+  try {
+    const all = await api('/entries');
+    const blob = new Blob([JSON.stringify(all, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'entries.json'; a.click();
+    URL.revokeObjectURL(url);
+  } catch (err) { alert('Export failed'); }
+});
+document.getElementById('importBtn').addEventListener('click', ()=> document.getElementById('importFile').click());
+document.getElementById('importFile').addEventListener('change', async (ev) => {
+  const f = ev.target.files[0];
+  if (!f) return;
+  const text = await f.text();
+  let arr;
+  try { arr = JSON.parse(text); } catch (err) { alert('Invalid JSON'); return; }
+  try {
+    // import each entry individually (server will insert); keep ids if present
+    for (const it of arr) {
+      await api('/entries', { method: 'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(it) });
+    }
+    alert('Imported');
+    loadEntries();
+  } catch (err) { alert('Import failed'); }
+  ev.target.value = '';
+});
+
+loadEntries();
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
